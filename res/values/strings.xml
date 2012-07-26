@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Announce</string>
+    <string name="package_name">com.app.announce</string>
+    <string name="contacts_file">contacts.json</string>
+    <string name="dlg1_ok">OK</string>
+    <string name="dlg1_cancel">Cancel</string>
+    <string name="create_newbutton">Create New Button</string>
+    <string-array name="messages">
+        <item >I am running late</item>
+        <item >I have been in an accident</item>
+        <item >I am lost</item>
+        <item >Almost there</item>
+    </string-array>
+
+</resources>

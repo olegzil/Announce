@@ -1,0 +1,40 @@
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/createbuttondialog_root"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <EditText
+            android:id="@+id/editText1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentTop="true"
+            android:layout_centerInParent="true"
+            android:ems="10"
+            android:inputType="text" >
+
+            <requestFocus />
+        </EditText>
+
+        <Button
+            android:id="@+id/dlg1_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/editText1"
+            android:layout_below="@+id/editText1"
+            android:layout_marginLeft="49dp"
+            android:layout_marginTop="62dp"
+            android:text="@string/dlg1_ok" />
+
+        <Button
+            android:id="@+id/dlg1_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/dlg1_ok"
+            android:layout_alignBottom="@+id/dlg1_ok"
+            android:layout_marginLeft="26dp"
+            android:layout_toRightOf="@+id/dlg1_ok"
+            android:text="@string/dlg1_cancel" />
+
+    </RelativeLayout>
