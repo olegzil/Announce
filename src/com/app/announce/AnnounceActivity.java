@@ -122,6 +122,37 @@ public class AnnounceActivity extends Activity {
 		for (ContactDescriptor b : mContacts)
 			b.getUIElement().setHeight(newSize / messages.length);
 	}
+	
+	Hashtable<Integer, ButtonDescriptor> fromJson(JSONObject json){
+		Hashtable<Integer, ButtonDescriptor> retVal = new Hashtable<Integer, ButtonDescriptor>();
+    	try {
+			JSONArray root = (JSONArray)json.get("buttons");
+			for (int i = 0; i<root.length(); ++i)
+			{
+				ButtonDescriptor bd = new ButtonDescriptor();
+				JSONObject buttonDescriptor = root.getJSONObject(i);
+				bd.caption = buttonDescriptor.getString("caption");
+				bd.id = buttonDescriptor.getInt("id");
+				JSONArray contacts = buttonDescriptor.getJSONArray("contacts");
+				bd.contacts = new Hashtable<String, ContactInfo>(); 
+				for (int j=0; j<contacts.length(); ++j){
+					JSONObject contact = contacts.getJSONObject(j);
+					ContactInfo ci = new ContactInfo();
+					ci.setDisplayName(contact.getString("name"));
+					ci.setPhoneNumber(contact.getString("phone"));
+					ci.setKey(0xff+j);
+					bd.contacts.put(ci.getPhoneNumber(), ci);
+				}
+				retVal.put(bd.id, bd);
+			}
+			return retVal;
+		} catch (JSONException e) {
+			Log.e("=-=-=-=-= createContactsFromJson", e.getMessage());
+			retVal = null;
+		}
+    	return retVal;
+    }
+    
 	private JSONObject toJson(){
 		JSONObject root=new JSONObject(); //root json object
 		JSONArray rootArray = new JSONArray(); //the root object contains a single array of buttons
@@ -221,15 +252,15 @@ public class AnnounceActivity extends Activity {
          
 	}
 	
-	private JSONObject readContacts(){
-		JSONObject retVal = null;
+	private boolean readContacts(){
+		boolean retVal = false;
 		SDDataPath sdData = new SDDataPath();
 		String rawJson = readFileFromInternalStorage(sdData.fname);
 		if (rawJson == null)
-			return null;
+			return retVal;
 		
         try {
-           	retVal = new JSONObject(rawJson);
+        	g_GlobalData.mContactData = fromJson(new JSONObject(rawJson));
 		} catch (JSONException e) {
 			Log.e("=-=-=-=-= readContacts", e.getMessage());
 		}
@@ -417,35 +448,6 @@ public class AnnounceActivity extends Activity {
         updateExternalStorageState();
     }
 
-    boolean createContactsFromJson(JSONObject json){
-    	boolean retVal = true;
-    	try {
-			JSONArray root = (JSONArray)json.get("buttons");
-			for (int i = 0; i<root.length(); ++i)
-			{
-				ButtonDescriptor bd = new ButtonDescriptor();
-				JSONObject buttonDescriptor = root.getJSONObject(i);
-				bd.caption = buttonDescriptor.getString("caption");
-				bd.id = buttonDescriptor.getInt("id");
-				JSONArray contacts = buttonDescriptor.getJSONArray("contacts");
-				bd.contacts = new Hashtable<String, ContactInfo>(); 
-				for (int j=0; j<contacts.length(); ++j){
-					JSONObject contact = contacts.getJSONObject(j);
-					ContactInfo ci = new ContactInfo();
-					ci.setDisplayName(contact.getString("name"));
-					ci.setPhoneNumber(contact.getString("phone"));
-					ci.setKey(0xff+j);
-					bd.contacts.put(ci.getPhoneNumber(), ci);
-				}
-				g_GlobalData.set(bd.id, bd);
-			}
-		} catch (JSONException e) {
-			Log.e("=-=-=-=-= createContactsFromJson", e.getMessage());
-			retVal = false;
-		}
-    	return retVal;
-    }
-    
     void stopWatchingExternalStorage() {
         unregisterReceiver(mExternalStorageReceiver);
         mExternalStorageReceiver = null;
@@ -454,6 +456,10 @@ public class AnnounceActivity extends Activity {
     @Override
     protected void onRestart() {
         super.onRestart();
+    	if (readContacts() == false)
+    		createDefaultContactList();
+        populateButtonArray();
+    	resizeUIElements(getWindowManager().getDefaultDisplay().getHeight());
     }
  
     @Override
@@ -461,7 +467,8 @@ public class AnnounceActivity extends Activity {
 		Log.d("=-=-=-=-=", "from onResume");
     	super.onResume();
     	startWatchingExternalStorage();
-   		createDefaultContactList();
+    	if (readContacts() == false)
+    		createDefaultContactList();
         populateButtonArray();
     	resizeUIElements(getWindowManager().getDefaultDisplay().getHeight());
     }
@@ -469,11 +476,13 @@ public class AnnounceActivity extends Activity {
     @Override
     protected void onPause(){
     	super.onPause();
+    	writeContacts();
     	stopWatchingExternalStorage();
     }
 
     @Override
     protected void onStop(){
+    	writeContacts();
     	super.onStop();
     }
 
