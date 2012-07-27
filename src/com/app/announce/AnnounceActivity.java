@@ -321,11 +321,11 @@ public class AnnounceActivity extends Activity {
 		//set up dialog
 		
         final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.delete_or_create_new_button);
+        dialog.setContentView(R.layout.delete_or_assign_new_button);
         dialog.setTitle(getResources().getString(R.string.create_or_destory_button));
         dialog.setCancelable(true);
         final Button addContacts = (Button) dialog.findViewById(R.id.addContacts);
-        final Button deleteButton = (Button) dialog.findViewById(R.id.deleteButton);
+        final Button deleteButton = (Button) dialog.findViewById(R.id.deleteContacts);
         deleteButton.setOnClickListener(new View.OnClickListener() {
 			
 			public void onClick(View v) {
