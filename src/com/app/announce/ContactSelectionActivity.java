@@ -133,15 +133,13 @@ public class ContactSelectionActivity extends Activity {
 			ll.addView(row);
 			text.setOnClickListener(new View.OnClickListener() {
 				
-				@Override
 				public void onClick(View v) {
 					box.setChecked(!box.isChecked());
 				}
 			});
 	        box.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 	        	
-				@Override
-	        	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
 	        	{
 	    			int key = buttonView.getId();
 	    			String keyPhone = uiData[key].getPhoneNumber();

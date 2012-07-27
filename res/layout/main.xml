@@ -12,7 +12,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="0.43" >
+        android:layout_weight="0.06" >
 
         <Button
             android:layout_width="wrap_content"

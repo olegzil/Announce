@@ -13,5 +13,8 @@
         <item >I am lost</item>
         <item >Almost there</item>
     </string-array>
+    <string name="create_or_destory_button">Delete Button or Assign Contacts?</string>
+    <string name="contact_assign_contacts">Assign Contacts to this Message</string>
+    <string name="contacts_delete_button">Delete this Button</string>
 
 </resources>

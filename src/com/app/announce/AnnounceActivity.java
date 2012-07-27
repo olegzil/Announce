@@ -18,13 +18,9 @@ import org.json.JSONObject;
 
 import com.app.announce.R;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -33,10 +29,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.Display;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import android.widget.LinearLayout;
@@ -249,10 +243,8 @@ public class AnnounceActivity extends Activity {
         dialog.setTitle(getResources().getString(R.string.create_newbutton));
         dialog.setCancelable(true);
         Button cancel = (Button) dialog.findViewById(R.id.dlg1_cancel);
-        final AnnounceActivity thisActivity = this;
         cancel.setOnClickListener(new View.OnClickListener() {
 			
-			@Override
 			public void onClick(View v) {
 				dialog.cancel();
 				
@@ -261,7 +253,6 @@ public class AnnounceActivity extends Activity {
         Button ok = (Button) dialog.findViewById(R.id.dlg1_ok);
         ok.setOnClickListener(new View.OnClickListener() {
 			
-			@Override
 			public void onClick(View v) {
 				EditText et = (EditText)dialog.findViewById(R.id.editText1);
 				ButtonDescriptor bd = new ButtonDescriptor();
@@ -270,7 +261,6 @@ public class AnnounceActivity extends Activity {
 				bd.id = AnnounceActivity.g_GlobalData.mContactData.size()+1;
 				AnnounceActivity.g_GlobalData.mContactData.put(bd.id, bd);
 				populateButtonArray();
-				thisActivity.populateButtonArray();
 				dialog.cancel();
 			}
 		});
@@ -292,7 +282,7 @@ public class AnnounceActivity extends Activity {
 				}
 			});
 		ll.addView(debugButton);
-		Enumeration<ButtonDescriptor> enumerator = g_GlobalData.mContactData.elements();
+		Enumeration<ButtonDescriptor> enumerator = g_GlobalData.get().elements();
 		while(enumerator.hasMoreElements()) {
 			ButtonDescriptor bd =enumerator.nextElement();
 			ContactDescriptor descriptor = new ContactDescriptor();
@@ -319,13 +309,38 @@ public class AnnounceActivity extends Activity {
 	        
 	        //setup onLongClick response
 	        b.setOnLongClickListener(new View.OnLongClickListener() {  
-				public boolean onLongClick(View v) {  
-					pickContact( b.getId(), b.getText().toString());
+				public boolean onLongClick(View v) {
+					determineAction(b.getId(), b.getText().toString());
 					return true;
 				}  
 			});      
 		}
 		this.setContentView(sv);
+	}
+	private void determineAction(final int targetButton, final String msg){
+		//set up dialog
+		
+        final Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.delete_or_create_new_button);
+        dialog.setTitle(getResources().getString(R.string.create_or_destory_button));
+        dialog.setCancelable(true);
+        final Button addContacts = (Button) dialog.findViewById(R.id.addContacts);
+        final Button deleteButton = (Button) dialog.findViewById(R.id.deleteButton);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+			
+			public void onClick(View v) {
+				deleteContact(targetButton);
+				dialog.dismiss();
+			}
+		});
+        addContacts.setOnClickListener( new View.OnClickListener(){
+			public void onClick(View v) {
+				dialog.dismiss();
+				pickContact(targetButton, msg);
+			}
+        	
+        });
+        dialog.show();
 	}
 	
     @Override
@@ -339,6 +354,15 @@ public class AnnounceActivity extends Activity {
         	resizeUIElements(display.getHeight());
         }
       }
+    protected void deleteContact(int id){
+		Hashtable<Integer, ButtonDescriptor> data = g_GlobalData.get();
+		data.remove(id);
+		populateButtonArray();
+		Display display = getWindowManager().getDefaultDisplay();
+    	resizeUIElements(display.getHeight());
+
+    }
+    
     protected void pickContact(int id, String caption) {
     	Intent intent = new Intent(this, ContactSelectionActivity.class);
     	intent.putExtra("id", id);
@@ -434,14 +458,10 @@ public class AnnounceActivity extends Activity {
  
     @Override
     protected void onResume(){
+		Log.d("=-=-=-=-=", "from onResume");
     	super.onResume();
     	startWatchingExternalStorage();
-    	JSONObject json = readContacts();
-    	if (json == null)
-    		createDefaultContactList();
-    	else if (createContactsFromJson(json) == false)
-    		createDefaultContactList();
-    		
+   		createDefaultContactList();
         populateButtonArray();
     	resizeUIElements(getWindowManager().getDefaultDisplay().getHeight());
     }
