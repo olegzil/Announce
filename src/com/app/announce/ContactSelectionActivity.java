@@ -107,6 +107,16 @@ public class ContactSelectionActivity extends Activity {
 		int checkBoxIndex = 0;
 		int textBoxIndex = uiData.length+1;
     	ButtonDescriptor bd = AnnounceActivity.g_GlobalData.getContacts(_id);
+	    Button b = new Button(this);
+	    b.setText("Cancel");
+        b.setOnClickListener(new View.OnClickListener() {  
+			public void onClick(View v) {
+				bCancel = true;
+				finish();
+			}
+		});      
+		ll.addView(b);
+		this.setContentView(sv);
 
         for (int i=0; i< uiData.length; ++i){
 			TextView text = new TextView(this);
@@ -158,16 +168,6 @@ public class ContactSelectionActivity extends Activity {
 	        	}
 	        });  
 		}
-	    Button b = new Button(this);
-	    b.setText("Cancel");
-        b.setOnClickListener(new View.OnClickListener() {  
-			public void onClick(View v) {
-				bCancel = true;
-				finish();
-			}
-		});      
-		ll.addView(b);
-		this.setContentView(sv);
     }
     @Override
     protected void onRestart() {

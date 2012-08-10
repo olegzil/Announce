@@ -1,11 +1,12 @@
 package com.app.announce;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -23,11 +24,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,7 +48,8 @@ public class AnnounceActivity extends Activity {
     private boolean mExternalStorageAvailable = false;
     private boolean mExternalStorageWriteable = false;
     private BroadcastReceiver mExternalStorageReceiver=null;
-
+    private SharedPreferences mPreferences;
+    
     /**
      * An SDK-specific instance of {@link ContactAccessor}.  The activity does not need
      * to know what SDK it is running in: all idiosyncrasies of different SDKs are
@@ -55,11 +59,9 @@ public class AnnounceActivity extends Activity {
 	private class SDDataPath{
 		public String path;
 		public String fname;
-		public String qualifiedPath;
 		public SDDataPath(){
 		    fname = getString(R.string.contacts_file);
 		    path =  getFilesDir() + "/";
-		    qualifiedPath = path + fname;
 		}
 	}
 	static public class ButtonDescriptor{
@@ -114,8 +116,41 @@ public class AnnounceActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
     	g_GlobalData = new GlobalData();
+    	this.mPreferences = this.getPreferences(MODE_PRIVATE);
+   	  
     }
     
+    String readRawFile(int id)
+    {
+        InputStream inputStream = getResources().openRawResource(id);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        int i;
+	     try {
+	    	 i = inputStream.read();
+	    	 while (i != -1){
+	    		 byteArrayOutputStream.write(i);
+	    		 i = inputStream.read();
+	    	 }
+	    	 inputStream.close();
+	    	 } catch (IOException e) {
+	    	 }
+	     
+	        return byteArrayOutputStream.toString();
+    }
+    
+
+    private String showFirstUseMessage(){
+    	
+    	boolean firstTime = mPreferences.getBoolean("firstTime", true);
+    	if (firstTime) {
+    	    SharedPreferences.Editor editor = mPreferences.edit();
+    	    editor.putBoolean("firstTime", false);
+    	    editor.commit();
+    	    return readRawFile(R.raw.help);
+    	   }
+    	return null;
+    }
+
 	private void resizeUIElements(int newSize){
 		Resources res = getResources();
 		String[] messages = res.getStringArray(R.array.messages);
@@ -257,10 +292,10 @@ public class AnnounceActivity extends Activity {
 		SDDataPath sdData = new SDDataPath();
 		String rawJson = readFileFromInternalStorage(sdData.fname);
 		if (rawJson == null)
-			return retVal;
-		
+			return false;
         try {
         	g_GlobalData.mContactData = fromJson(new JSONObject(rawJson));
+    		retVal = true;
 		} catch (JSONException e) {
 			Log.e("=-=-=-=-= readContacts", e.getMessage());
 		}
@@ -300,19 +335,29 @@ public class AnnounceActivity extends Activity {
 	
 	private void populateButtonArray()
 	{
+		final Activity thisActivity = this;
 		mContacts = new ArrayList<ContactDescriptor>();
 		ScrollView sv = new ScrollView(this); 		//create a scroll view in case we have to scroll the buttons
 		final LinearLayout ll = new LinearLayout(this);	//layout object
 		ll.setOrientation(LinearLayout.VERTICAL);	//initial orientation
 		sv.addView(ll);								//connect the two
-		Button debugButton=new Button(this);
-		debugButton.setText("Create New Message");
-		debugButton.setOnClickListener(new View.OnClickListener() {
+		Button createNewMsgButton=new Button(this);
+		Button helpButton = new Button(this);
+		helpButton.setText(R.string.helpButtonText);
+		createNewMsgButton.setText(R.string.newButton);
+		createNewMsgButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v){
 				createNewButton();
 				}
 			});
-		ll.addView(debugButton);
+		helpButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v){
+				new PopupWindowMessage(thisActivity, readRawFile(R.raw.help));
+				}
+			});
+
+		ll.addView(createNewMsgButton);
+		ll.addView(helpButton);
 		Enumeration<ButtonDescriptor> enumerator = g_GlobalData.get().elements();
 		while(enumerator.hasMoreElements()) {
 			ButtonDescriptor bd =enumerator.nextElement();
@@ -329,12 +374,22 @@ public class AnnounceActivity extends Activity {
 				public void onClick(View v) {
 					ButtonDescriptor bd = AnnounceActivity.g_GlobalData.getContacts(b.getId());
 					Enumeration<ContactInfo> ciEnum = bd.contacts.elements(); 
+					if (bd.contacts.size() == 0)
+					{
+						Toast t = Toast.makeText(getApplicationContext(), R.string.no_contacts, Toast.LENGTH_SHORT);
+						t.setGravity(Gravity.CENTER, 0,0);
+						t.show();
+						return;
+					}
 			        SmsManager sms = SmsManager.getDefault();
 					while (ciEnum.hasMoreElements()){
 						ContactInfo ci = ciEnum.nextElement();
 				        sms.sendTextMessage(ci.getPhoneNumber(), null, bd.caption, null, null);        
-						
 					}
+					String msg = String.format(getString(R.string.contact_message_sent), bd.contacts.size());
+					Toast t = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT);
+					t.setGravity(Gravity.CENTER, 0,0);
+					t.show();
 				}  
 			});      
 	        
@@ -348,6 +403,15 @@ public class AnnounceActivity extends Activity {
 		}
 		this.setContentView(sv);
 	}
+	private void confirmSend(ButtonDescriptor bd){
+		Enumeration<ContactInfo> ciEnum = bd.contacts.elements(); 
+        SmsManager sms = SmsManager.getDefault();
+		while (ciEnum.hasMoreElements()){
+			ContactInfo ci = ciEnum.nextElement();
+	        sms.sendTextMessage(ci.getPhoneNumber(), null, bd.caption, null, null);        
+		}
+	}
+	
 	private void determineAction(final int targetButton, final String msg){
 		//set up dialog
 		
@@ -464,13 +528,15 @@ public class AnnounceActivity extends Activity {
  
     @Override
     protected void onResume(){
-		Log.d("=-=-=-=-=", "from onResume");
     	super.onResume();
     	startWatchingExternalStorage();
     	if (readContacts() == false)
     		createDefaultContactList();
         populateButtonArray();
     	resizeUIElements(getWindowManager().getDefaultDisplay().getHeight());
+    	String msg = showFirstUseMessage();
+    	if (msg != null)
+    		 new PopupWindowMessage(this, msg);  
     }
 
     @Override

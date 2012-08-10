@@ -1,23 +1,21 @@
-What this app does.
 This app sends SMS messages to one or more contacts in your contact list. If your contact has more then one phone number
 listed, the first one is selected. You can create custom messages. These are displayed as buttons. The message displayed on the
 button is sent as soon as you touch the button
 
 1. Create a button with a custom message
-2. Assigne recievers to the button
+2. Assign receivers to the button
 3. Press the button and send the message it displays to the associated receivers
 4. Delete buttons.
-5. Create buttons.
 
 How Do I associate receivers with a button?
 	Press and hold the button.
-	A menue is displayed that gives you the choice to assigne contacts to the button or to delete this button
-	Touch "Assigne Contacts"
+	A menu is displayed that gives you the choice to assign contacts to the button or to delete this button
+	Touch "Assign Contacts"
 	A list of phone numbers is displayed. 
 	Touch a phone number to select it (the check box will become selected).
-	Touch it again to de-select it.
+	Touch it again to deselect it.
 
-How do I cancel selection.
+How do I cancel selection?
 	Scroll down to the bottom of your phone list.
 	Touch the "Cancel" button.
 
@@ -27,6 +25,4 @@ How do I save my selection?
 How do I send a message?
 	Touch the button that is showing the message you want to send.
 
-Buttons that have no messages associated with them are not disabled. Touching them will not send messages. Buttons that are
-associated with receivers, will display an aknowlegement if you touch them. Although you can delete the standard buttons, they will 
-be readded when you restart the app.
+Buttons that have no messages associated with them are not disabled. Touching them will not send messages. Buttons that are associated with receivers, will display an acknowledgement if you touch them. Although you can delete the standard buttons, they will be re added when you restart the app.
